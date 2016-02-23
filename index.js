@@ -12,19 +12,31 @@ var config = {
   ]
 };
 
-function renameFile(path, getNewName) {
+function renameFile(path, cb) {
   var lastSplashIndex = _.lastIndexOf(path, '/');
   var basePath = path.slice(0, lastSplashIndex);
   var oldName = path.slice(lastSplashIndex+1);
-  console.log(basePath,'    ', oldName);
-  console.log(getNewName(oldName));
-  // fs.rename(path, getNewName(oldName), function (error) {
-    // if ( error ) console.log('ERROR: ' + error);
-  // });
+  var newPath = basePath + appendTimestampToFileName(oldName);
+  fs.rename(path, newPath, cb);
 }
 
-function buildNewName(oldName){
-  return oldName + new Date().getTime();
+function backupOldFiles(listOfFiles){
+  _.each(listOfFiles, function(file){
+    renameFile(file.source, renameCallback);
+  });
 }
 
-renameFile('first/second', buildNewName);
+function renameCallback(error, file){
+  if (error){
+    console.log(error);
+    file.isRenameSuccess = false;
+  }else{
+    file.isRenameSuccess = true;
+  }
+}
+
+function appendTimestampToFileName(name){
+  return name + new Date().getTime();
+}
+
+backupOldFiles();
